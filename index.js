@@ -18,7 +18,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //applicaiton/json 형태로 된 데이터를 분석해서 가져옴
 app.use(bodyParser.json());
 
-app.get('/', (req, res) => res.send('hi'));
+app.get('/', (req, res) => res.send('hi~ hello~'));
 
 app.post('/register', async (req, res) => {
     //회원 가입 할때 필요한 정보들을 client에서 가져오면
