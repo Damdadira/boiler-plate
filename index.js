@@ -3,12 +3,14 @@ const app = express();
 const port = 5000;
 const bodyParser = require('body-parser');
 
+const config = require('./config/key');
+
 //모델 가져오기
 const { User } = require('./modles/User');
 
 const mongoose = require('mongoose');
 mongoose
-    .connect('mongodb+srv://damdadi:1234@cluster0.e0xujcy.mongodb.net/')
+    .connect(config.mongoURI)
     .then(() => console.log('MongoDB Connected...'))
     .catch((err) => console.log(err));
 
