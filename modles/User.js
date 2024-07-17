@@ -55,6 +55,15 @@ userSchema.pre('save', function (next) {
     }
 });
 
+userSchema.methods.comparePaassword = function (plainPassword, callBack) {
+    //plainPassword: 1234567    암호화된 비밀번호:$2b$10$chOeu7CJm5Ogry7eZOdZN.7yAVKqxDlmC1po8gS3.O3S6Jat2kkga
+    //두개의 비밀번호가 같은지 비교하려면 plainPassword를 암호화해서 확인(암호화된 비밀번호를 복호화할수 없기 때문)
+    bcrypt.compare(plainPassword, this.password, function (err, isMatch) {
+        if (err) return callBack(err);
+        callBack(null, isMatch);
+    });
+};
+
 const User = mongoose.model('User', userSchema);
 
 module.exports = { User }; //다른곳에서도 사용할 수 있게 export
