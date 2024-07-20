@@ -62,7 +62,7 @@ app.post('/api/users/login', async (req, res) => {
         const token = await user.generateToken();
 
         //token을 저장한다. 어디에? 쿠키
-        res.cookie('x-auth', token)
+        res.cookie('x_auth', token)
             .status(200)
             .json({ loginSuccess: true, userId: user._id });
     } catch (err) {
@@ -84,13 +84,13 @@ app.get('/api/users/auth', auth, (req, res) => {
     });
 });
 
-app.get('/api/users/logout', auth, (req, res) => {
-    User.findOneAndUpdate({ id: req.user._id }, { token: '' }, (err, user) => {
-        if (err) return res.json({ success: false, err });
-        return res.status(200).send({
-            success: true,
-        });
-    });
+app.get('/api/users/logout', auth, async (req, res) => {
+    try {
+        await User.findOneAndUpdate({ id: req.user._id }, { token: '' });
+        res.status(200).send({ success: true });
+    } catch (err) {
+        res.json({ success: false, err });
+    }
 });
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
