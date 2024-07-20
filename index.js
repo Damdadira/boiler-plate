@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const port = 5000;
 const bodyParser = require('body-parser');
-
+const cookieParser = require('cookie-parser');
 const config = require('./config/key');
 
 //모델 가져오기
@@ -19,6 +19,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 //applicaiton/json 형태로 된 데이터를 분석해서 가져옴
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 app.get('/', (req, res) => res.send('hi~ hello~'));
 
@@ -35,29 +36,37 @@ app.post('/register', async (req, res) => {
     }
 });
 
-app.post('./login', (req, res) => {
-    //1. 요청된 이메일을 데이터베이스에서 있는지 찾는다
-    User.findOne({ email: req.body.email }, (err, user) => {
+app.post('/login', async (req, res) => {
+    try {
+        //1. 요청된 이메일을 데이터베이스에서 있는지 찾는다
+        const user = await User.findOne({ email: req.body.email });
         if (!user) {
             return res.json({
                 loginSuccess: false,
                 message: '이메일에 해당하는 유저가 없습니다.',
             });
         }
-        //2. 요청된 이메일이 데이터베이스에 있다면, 비밀번호가 맞는 비밀번호인지 확인
-        user.comparePaassword(req.body.password, (err, isMatch) => {
-            //비밀번호가 다름
-            if (!isMatch) {
-                return res.json({
-                    loginSuccess: false,
-                    message: '비밀번호가 틀렸습니다.',
-                });
-            }
 
-            //3. 비밀번호가 맞다면, 유저를 위한 토큰 생성
-            user.generateToken((err, user) => {});
-        });
-    });
+        //2. 요청된 이메일이 데이터베이스에 있다면, 비밀번호가 맞는 비밀번호인지 확인
+        const isMatch = await user.comparePassword(req.body.password);
+        //비밀번호가 다름
+        if (!isMatch) {
+            return res.json({
+                loginSuccess: false,
+                message: '비밀번호가 틀렸습니다.',
+            });
+        }
+
+        //3. 비밀번호가 맞다면, 유저를 위한 토큰 생성
+        const token = await user.generateToken();
+
+        //token을 저장한다. 어디에? 쿠키
+        res.cookie('x-auth', token)
+            .status(200)
+            .json({ loginSuccess: true, userId: user._id });
+    } catch (err) {
+        res.status(500).send(err);
+    }
 });
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));

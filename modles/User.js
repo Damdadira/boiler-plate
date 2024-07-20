@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const saltRounds = 10; //자리수
+const jwt = require('jsonwebtoken');
+const { application } = require('express');
 
 const userSchema = mongoose.Schema({
     name: {
@@ -55,13 +57,33 @@ userSchema.pre('save', function (next) {
     }
 });
 
-userSchema.methods.comparePaassword = function (plainPassword, callBack) {
+userSchema.methods.comparePassword = function (plainPassword) {
     //plainPassword: 1234567    암호화된 비밀번호:$2b$10$chOeu7CJm5Ogry7eZOdZN.7yAVKqxDlmC1po8gS3.O3S6Jat2kkga
     //두개의 비밀번호가 같은지 비교하려면 plainPassword를 암호화해서 확인(암호화된 비밀번호를 복호화할수 없기 때문)
-    bcrypt.compare(plainPassword, this.password, function (err, isMatch) {
-        if (err) return callBack(err);
-        callBack(null, isMatch);
+    return new Promise((resolve, reject) => {
+        bcrypt.compare(plainPassword, this.password, function (err, isMatch) {
+            if (err) return reject(err);
+            resolve(isMatch);
+        });
     });
+};
+
+userSchema.methods.generateToken = async function () {
+    var user = this;
+
+    //jsonwebtoken을 이용해서 token을 생성하기
+    var token = jwt.sign(user._id.toHexString(), 'secretToken');
+
+    //user._id + 'secretToken' = token
+    //'secretToken' -> user._id
+
+    user.token = token;
+    try {
+        await user.save();
+        return token; //user 정보 전달
+    } catch (err) {
+        throw err;
+    }
 };
 
 const User = mongoose.model('User', userSchema);
