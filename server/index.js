@@ -24,6 +24,12 @@ app.use(cookieParser());
 
 app.get('/', (req, res) => res.send('hi~ hello~'));
 
+app.get('/api/hello', (req, res) => {
+    res.send('안녕하세요~');
+});
+
+app.get('/api/hello', (req, res) => res.send('Hello World!~~ '));
+
 app.post('/api/users/register', async (req, res) => {
     //회원 가입 할때 필요한 정보들을 client에서 가져오면
     //그것들을 데이터베이스에 넣어준다.
